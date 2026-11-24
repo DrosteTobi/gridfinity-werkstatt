@@ -1,6 +1,6 @@
 # Gridfinity Werkstatt — Drawer Configurator
 
-Standalone Gridfinity drawer planner (German default + English). Set drawer size in grid units, place bins / baseplates / dividers on an interactive grid, review a live bill of materials, and submit an order with contact details.
+Standalone Gridfinity drawer planner (German default + English). Enter drawer **inner size in cm**; the app derives the largest whole Gridfinity grid that fits (42 mm / unit, floor — never rounds up). Place bins / baseplates / dividers on a full-viewport planner, review a live bill of materials, and submit an order with contact details.
 
 ## Run locally
 
