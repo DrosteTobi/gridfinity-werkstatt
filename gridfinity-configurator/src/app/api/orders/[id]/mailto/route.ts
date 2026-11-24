@@ -8,9 +8,7 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const token =
-    req.headers.get("x-admin-token") ||
-    req.nextUrl.searchParams.get("token");
+  const token = req.headers.get("x-admin-token");
   if (!isValidAdminToken(token)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

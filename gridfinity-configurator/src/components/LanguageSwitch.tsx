@@ -7,7 +7,7 @@ export function LanguageSwitch() {
   const { locale, setLocale } = useConfigurator();
   return (
     <div
-      className="inline-flex border border-[rgba(138,148,156,0.35)]"
+      className="inline-flex overflow-hidden rounded-lg border border-[rgba(138,148,156,0.35)]"
       role="group"
       aria-label="Language"
     >

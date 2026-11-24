@@ -96,13 +96,20 @@ export function GridPlanner() {
           {t(locale, "gridTitle")}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs text-muted">
-            {t(locale, "fill")}: {fill}% · {drawer.width}×{drawer.depth} U ·{" "}
-            {drawer.widthCm}×{drawer.depthCm} cm
+          <span className="inline-flex items-center gap-2 rounded-lg border border-[rgba(138,148,156,0.28)] bg-[rgba(10,12,14,0.4)] px-2.5 py-1 font-mono text-xs text-muted">
+            <span className="rounded bg-[rgba(201,162,39,0.18)] px-1.5 py-0.5 text-brass">
+              {fill}% {t(locale, "fill")}
+            </span>
+            <span>
+              {drawer.width}×{drawer.depth} U
+            </span>
+            <span className="text-[10px] opacity-80">
+              {drawer.widthCm}×{drawer.depthCm} cm
+            </span>
           </span>
           <button
             type="button"
-            className="btn-ghost text-sm"
+            className="btn-ghost rounded-lg text-sm"
             onClick={() => clearLayer(activeLayer)}
           >
             {t(locale, "clearLayer")}
@@ -110,7 +117,7 @@ export function GridPlanner() {
           {selectedInstanceId && (
             <button
               type="button"
-              className="btn-ghost text-sm"
+              className="btn-ghost rounded-lg text-sm"
               onClick={() => removeInstance(selectedInstanceId)}
             >
               {t(locale, "remove")}
@@ -133,7 +140,9 @@ export function GridPlanner() {
         ) : (
           <div
             ref={boardRef}
-            className="relative touch-none select-none"
+            className={`relative touch-none select-none rounded-lg ${
+              previewMod && !dragId ? "cursor-cell" : "cursor-default"
+            }`}
             style={{
               width: drawer.width * cell,
               height: drawer.depth * cell,
@@ -235,20 +244,34 @@ export function GridPlanner() {
 
             {hover && previewMod && !dragId && (
               <div
-                className={`pointer-events-none absolute ${previewOk ? "grid-cell-pulse" : ""}`}
+                className={`pointer-events-none absolute rounded-md ${
+                  previewOk ? "grid-cell-pulse" : ""
+                }`}
                 style={{
                   left: hover.x * cell + 2,
                   top: hover.y * cell + 2,
                   width: previewMod.width * cell - 4,
                   height: previewMod.depth * cell - 4,
                   background: previewOk
-                    ? `${previewMod.color}99`
+                    ? `${previewMod.color}88`
                     : "rgba(196,92,74,0.35)",
                   outline: previewOk
-                    ? "1px solid rgba(201,162,39,0.7)"
-                    : "1px solid rgba(196,92,74,0.8)",
+                    ? "2px solid var(--brass-hot)"
+                    : "2px solid rgba(196,92,74,0.9)",
+                  boxShadow: previewOk
+                    ? "0 0 0 1px rgba(224,184,74,0.35), 0 8px 18px rgba(0,0,0,0.25)"
+                    : undefined,
                 }}
-              />
+              >
+                {previewOk && (
+                  <span
+                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brass text-[11px] text-[#14160f] shadow"
+                    aria-hidden
+                  >
+                    ✥
+                  </span>
+                )}
+              </div>
             )}
 
             {layerPlacements.map((p) => {
@@ -261,7 +284,7 @@ export function GridPlanner() {
                 <button
                   key={p.instanceId}
                   type="button"
-                  className="absolute cursor-grab touch-none border border-black/40 text-left active:cursor-grabbing"
+                  className="absolute cursor-grab touch-none rounded-md border border-black/40 text-left active:cursor-grabbing"
                   style={{
                     left: showAt.x * cell + 2,
                     top: showAt.y * cell + 2,
@@ -270,11 +293,11 @@ export function GridPlanner() {
                     background: mod.color,
                     outline: selected
                       ? "2px solid var(--brass-hot)"
-                      : "1px solid rgba(255,255,255,0.12)",
+                      : "1px solid rgba(255,255,255,0.14)",
                     zIndex: dragging ? 5 : 2,
                     boxShadow: selected
-                      ? "0 8px 20px rgba(0,0,0,0.35)"
-                      : "inset 0 1px 0 rgba(255,255,255,0.1)",
+                      ? "0 10px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(224,184,74,0.35)"
+                      : "inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.2)",
                   }}
                   onPointerDown={(e) => {
                     e.stopPropagation();
