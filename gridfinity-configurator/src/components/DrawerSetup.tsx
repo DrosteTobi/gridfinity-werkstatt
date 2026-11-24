@@ -92,7 +92,7 @@ export function DrawerSetup() {
       </div>
 
       <div
-        className={`mt-3 border px-3 py-2 font-mono text-sm ${
+        className={`mt-3 rounded-lg border px-3 py-2 font-mono text-sm ${
           tooSmall
             ? "border-[var(--danger)]/50 text-[var(--danger)]"
             : "border-brass/40 text-brass"
@@ -124,33 +124,60 @@ export function DrawerSetup() {
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2">
+      <div className="mt-3 space-y-2">
+        <div className="flex items-center justify-between gap-2">
           <span className="label mb-0">{t(locale, "drawerLayers")}</span>
-          <input
-            className="field w-16 font-mono py-1"
-            type="number"
-            min={1}
-            max={3}
-            value={drawer.layers}
-            onChange={(e) => setLayers(Number(e.target.value) || 1)}
-          />
-        </label>
-        {drawer.layers > 1 &&
-          Array.from({ length: drawer.layers }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              className={`btn-ghost px-2 py-1 text-xs ${
-                activeLayer === i
-                  ? "!border-brass !bg-[rgba(201,162,39,0.15)]"
-                  : ""
-              }`}
-              onClick={() => setActiveLayer(i)}
-            >
-              {t(locale, "layer")} {i + 1}
-            </button>
-          ))}
+          <div
+            className="inline-flex rounded-lg border border-[rgba(138,148,156,0.28)] bg-[rgba(10,12,14,0.35)] p-0.5"
+            role="group"
+            aria-label={t(locale, "drawerLayers")}
+          >
+            {[1, 2, 3].map((n) => {
+              const active = drawer.layers === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  className={`min-w-9 rounded-md px-2.5 py-1 font-mono text-xs transition ${
+                    active
+                      ? "bg-[rgba(201,162,39,0.22)] text-brass ring-1 ring-brass/50"
+                      : "text-muted hover:text-ink"
+                  }`}
+                  onClick={() => setLayers(n)}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {drawer.layers > 1 && (
+          <div
+            className="flex rounded-lg border border-[rgba(138,148,156,0.28)] bg-[rgba(10,12,14,0.35)] p-1"
+            role="tablist"
+            aria-label={t(locale, "layer")}
+          >
+            {Array.from({ length: drawer.layers }, (_, i) => {
+              const active = activeLayer === i;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`flex-1 rounded-md px-2 py-1.5 text-center text-xs font-medium transition ${
+                    active
+                      ? "bg-[rgba(201,162,39,0.22)] text-brass shadow-sm ring-1 ring-brass/50"
+                      : "text-muted hover:text-ink"
+                  }`}
+                  onClick={() => setActiveLayer(i)}
+                >
+                  {t(locale, "layer")} {i + 1}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

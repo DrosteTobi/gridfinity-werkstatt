@@ -165,9 +165,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const token =
-    req.headers.get("x-admin-token") ||
-    req.nextUrl.searchParams.get("token");
+  const token = req.headers.get("x-admin-token");
   if (!isValidAdminToken(token)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

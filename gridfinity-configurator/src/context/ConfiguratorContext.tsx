@@ -41,6 +41,7 @@ interface ConfiguratorState {
   placeAt: (x: number, y: number) => boolean;
   moveInstance: (instanceId: string, x: number, y: number) => boolean;
   removeInstance: (instanceId: string) => void;
+  removeModuleLine: (moduleId: string) => void;
   clearLayer: (layer: number) => void;
   resetPlan: () => void;
   bom: OrderItemSnapshot[];
@@ -175,6 +176,17 @@ export function ConfiguratorProvider({ children }: { children: ReactNode }) {
     setSelectedInstanceId((id) => (id === instanceId ? null : id));
   }, []);
 
+  const removeModuleLine = useCallback((moduleId: string) => {
+    setPlacements((prev) => {
+      const next = prev.filter((p) => p.moduleId !== moduleId);
+      setSelectedInstanceId((id) => {
+        if (!id) return null;
+        return next.some((p) => p.instanceId === id) ? id : null;
+      });
+      return next;
+    });
+  }, []);
+
   const clearLayer = useCallback((layer: number) => {
     setPlacements((prev) => prev.filter((p) => p.layer !== layer));
     setSelectedInstanceId(null);
@@ -209,6 +221,7 @@ export function ConfiguratorProvider({ children }: { children: ReactNode }) {
     placeAt,
     moveInstance,
     removeInstance,
+    removeModuleLine,
     clearLayer,
     resetPlan,
     bom,

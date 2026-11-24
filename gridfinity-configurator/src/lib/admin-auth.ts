@@ -1,8 +1,11 @@
-export function getAdminToken(): string {
-  return process.env.ADMIN_TOKEN?.trim() || "local-dev-admin";
+/** Admin gate — requires ADMIN_TOKEN in the environment; no shipped default. */
+export function getAdminToken(): string | null {
+  const token = process.env.ADMIN_TOKEN?.trim();
+  return token ? token : null;
 }
 
 export function isValidAdminToken(token: string | null | undefined): boolean {
-  if (!token) return false;
-  return token === getAdminToken();
+  const expected = getAdminToken();
+  if (!expected || !token) return false;
+  return token === expected;
 }

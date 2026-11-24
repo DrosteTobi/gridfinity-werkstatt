@@ -7,23 +7,24 @@ Standalone Gridfinity drawer planner (German default + English). Enter drawer **
 ```bash
 cd gridfinity-configurator
 npm install
+cp .env.example .env.local   # set ADMIN_TOKEN (and optionally ORDER_NOTIFY_EMAIL)
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
 - Planner: `/`
-- Order admin: `/admin/orders` (unlock with `ADMIN_TOKEN`, default `local-dev-admin`)
+- Order admin: `/admin/orders` (unlock with `ADMIN_TOKEN` from your environment)
 
 Local order storage uses in-memory **PGlite** (no Postgres required). Set `DATABASE_URL` only when pointing at a real Postgres (Cursor apps hosting sets this automatically).
 
 ## Environment
 
-| Variable | Purpose | Local fallback |
+| Variable | Purpose | Notes |
 | --- | --- | --- |
-| `ORDER_NOTIFY_EMAIL` | Owner mailbox for mailto / notify metadata | `orders@example.local` |
-| `ORDER_WEBHOOK_URL` | Optional POST webhook on new orders | unset (skipped) |
-| `ADMIN_TOKEN` | Protects order list API + admin unlock | `local-dev-admin` |
+| `ORDER_NOTIFY_EMAIL` | Owner mailbox for mailto / notify metadata | Optional locally |
+| `ORDER_WEBHOOK_URL` | Optional POST webhook on new orders | unset → skipped |
+| `ADMIN_TOKEN` | Protects order list API + admin unlock | **Required** — no shipped default |
 | `DATABASE_URL` | Postgres for durable orders | unset → PGlite |
 
 Copy `.env.example` for reference. Do not commit real secrets.

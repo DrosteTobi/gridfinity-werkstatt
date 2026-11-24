@@ -53,7 +53,7 @@ export default function AdminOrdersPage() {
       title: "Bestellungen",
       auth: "Admin-Token",
       unlock: "Freischalten",
-      hint: "Token aus ADMIN_TOKEN (lokal: local-dev-admin).",
+      hint: "Token aus der Umgebungsvariable ADMIN_TOKEN.",
       empty: "Noch keine Bestellungen.",
       back: "Zur Planung",
       notify: "Benachrichtigung",
@@ -63,7 +63,7 @@ export default function AdminOrdersPage() {
       title: "Orders",
       auth: "Admin token",
       unlock: "Unlock",
-      hint: "Use ADMIN_TOKEN (local default: local-dev-admin).",
+      hint: "Token from the ADMIN_TOKEN environment variable.",
       empty: "No orders yet.",
       back: "Back to planner",
       notify: "Notify",
@@ -123,13 +123,7 @@ export default function AdminOrdersPage() {
               autoComplete="current-password"
             />
           </label>
-          <p className="text-xs text-muted">
-            {process.env.NODE_ENV === "development"
-              ? copy.hint
-              : locale === "de"
-                ? "Token aus der Umgebungsvariable ADMIN_TOKEN."
-                : "Token from the ADMIN_TOKEN environment variable."}
-          </p>
+          <p className="text-xs text-muted">{copy.hint}</p>
           {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
           <button type="submit" className="btn-primary" disabled={loading}>
             {copy.unlock}
