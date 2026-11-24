@@ -21,7 +21,15 @@ export interface PlacedModule {
   layer: number;
 }
 
+/** Planner drawer: user enters cm; width/depth/layers are derived units. */
 export interface DrawerSize {
+  /** Inner width in centimeters (user input). */
+  widthCm: number;
+  /** Inner depth in centimeters (user input). */
+  depthCm: number;
+  /** Inner height in centimeters (optional). */
+  heightCm: number | null;
+  /** Derived Gridfinity units (floor of cm ÷ 4.2). */
   width: number;
   depth: number;
   layers: number;

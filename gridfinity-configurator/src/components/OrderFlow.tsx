@@ -89,7 +89,8 @@ export function OrderFlow() {
             <p className="mt-2 text-sm text-muted">{t(locale, "reviewConfig")}</p>
             <div className="mt-4 space-y-2 font-mono text-sm">
               <p>
-                {drawer.width}×{drawer.depth} U · {drawer.layers}{" "}
+                {drawer.widthCm}×{drawer.depthCm} cm → {drawer.width}×
+                {drawer.depth} U · {drawer.layers}{" "}
                 {t(locale, "layer").toLowerCase()}
                 {drawer.layers > 1 ? "s" : ""}
               </p>

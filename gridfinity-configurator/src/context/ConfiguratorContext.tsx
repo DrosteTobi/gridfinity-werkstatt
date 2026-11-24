@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { catalogById } from "@/lib/catalog";
+import { defaultDrawer, deriveDrawer } from "@/lib/drawer";
 import { canPlace } from "@/lib/geometry";
 import { buildBom, totalFromItems } from "@/lib/orders-client";
 import type {
@@ -24,7 +25,12 @@ interface ConfiguratorState {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   drawer: DrawerSize;
-  setDrawer: (drawer: DrawerSize) => void;
+  setDrawerCm: (input: {
+    widthCm: number;
+    depthCm: number;
+    heightCm: number | null;
+  }) => void;
+  setLayers: (layers: number) => void;
   placements: PlacedModule[];
   selectedModuleId: string | null;
   setSelectedModuleId: (id: string | null) => void;
@@ -49,15 +55,26 @@ interface ConfiguratorState {
 
 const ConfiguratorContext = createContext<ConfiguratorState | null>(null);
 
-const DEFAULT_DRAWER: DrawerSize = { width: 7, depth: 5, layers: 1 };
-
 function newInstanceId(): string {
   return `p-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function prunePlacements(
+  placements: PlacedModule[],
+  drawer: DrawerSize,
+): PlacedModule[] {
+  return placements.filter((p) => {
+    const mod = catalogById[p.moduleId];
+    if (!mod) return false;
+    if (drawer.width < 1 || drawer.depth < 1) return false;
+    if (p.layer >= drawer.layers) return false;
+    return p.x + mod.width <= drawer.width && p.y + mod.depth <= drawer.depth;
+  });
+}
+
 export function ConfiguratorProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>("de");
-  const [drawer, setDrawerState] = useState<DrawerSize>(DEFAULT_DRAWER);
+  const [drawer, setDrawerState] = useState<DrawerSize>(defaultDrawer);
   const [placements, setPlacements] = useState<PlacedModule[]>([]);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     "bin-2x2-3u",
@@ -70,29 +87,39 @@ export function ConfiguratorProvider({ children }: { children: ReactNode }) {
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [placementError, setPlacementError] = useState(false);
 
-  const setDrawer = useCallback((next: DrawerSize) => {
-    const clamped: DrawerSize = {
-      width: Math.min(16, Math.max(2, Math.round(next.width))),
-      depth: Math.min(16, Math.max(2, Math.round(next.depth))),
-      layers: Math.min(3, Math.max(1, Math.round(next.layers))),
-    };
-    setDrawerState(clamped);
-    setPlacements((prev) =>
-      prev.filter((p) => {
-        const mod = catalogById[p.moduleId];
-        if (!mod) return false;
-        if (p.layer >= clamped.layers) return false;
-        return (
-          p.x + mod.width <= clamped.width && p.y + mod.depth <= clamped.depth
-        );
-      }),
-    );
-    setActiveLayer((layer) => Math.min(layer, clamped.layers - 1));
+  const setDrawerCm = useCallback(
+    (input: {
+      widthCm: number;
+      depthCm: number;
+      heightCm: number | null;
+    }) => {
+      const next = deriveDrawer(input.widthCm, input.depthCm, input.heightCm);
+      setDrawerState(next);
+      setPlacements((prev) => prunePlacements(prev, next));
+      setActiveLayer((layer) => Math.min(layer, Math.max(0, next.layers - 1)));
+    },
+    [],
+  );
+
+  const setLayers = useCallback((layers: number) => {
+    setDrawerState((prev) => {
+      const next: DrawerSize = {
+        ...prev,
+        layers: Math.min(3, Math.max(1, Math.round(layers))),
+      };
+      setPlacements((p) => prunePlacements(p, next));
+      setActiveLayer((layer) => Math.min(layer, next.layers - 1));
+      return next;
+    });
   }, []);
 
   const placeAt = useCallback(
     (x: number, y: number) => {
       if (!selectedModuleId) return false;
+      if (drawer.width < 1 || drawer.depth < 1) {
+        setPlacementError(true);
+        return false;
+      }
       if (
         !canPlace(drawer, placements, selectedModuleId, x, y, activeLayer)
       ) {
@@ -156,7 +183,7 @@ export function ConfiguratorProvider({ children }: { children: ReactNode }) {
   const resetPlan = useCallback(() => {
     setPlacements([]);
     setSelectedInstanceId(null);
-    setDrawerState(DEFAULT_DRAWER);
+    setDrawerState(defaultDrawer());
     setActiveLayer(0);
     setStep("plan");
     setLastOrderId(null);
@@ -170,7 +197,8 @@ export function ConfiguratorProvider({ children }: { children: ReactNode }) {
     locale,
     setLocale,
     drawer,
-    setDrawer,
+    setDrawerCm,
+    setLayers,
     placements,
     selectedModuleId,
     setSelectedModuleId,

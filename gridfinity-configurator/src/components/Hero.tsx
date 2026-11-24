@@ -8,7 +8,7 @@ export function Hero() {
   const { locale } = useConfigurator();
 
   return (
-    <header className="relative min-h-[100svh] overflow-hidden">
+    <header id="top" className="relative min-h-[70svh] overflow-hidden md:min-h-[80svh]">
       <div
         className="absolute inset-0"
         aria-hidden
@@ -19,7 +19,7 @@ export function Hero() {
           backgroundPosition: "center",
         }}
       />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#121417] to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#121417] to-transparent" />
 
       <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-5 md:px-8">
         <a href="#planner" className="font-display text-2xl tracking-wide text-ink/80">
@@ -33,11 +33,11 @@ export function Hero() {
         </div>
       </nav>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-5rem)] max-w-6xl flex-col justify-end px-5 pb-16 pt-10 md:justify-center md:px-8 md:pb-24">
+      <div className="relative z-10 mx-auto flex min-h-[calc(70svh-5rem)] max-w-6xl flex-col justify-end px-5 pb-14 pt-8 md:min-h-[calc(80svh-5rem)] md:justify-center md:px-8 md:pb-20">
         <p className="animate-rise font-mono text-xs uppercase tracking-[0.28em] text-brass">
           Gridfinity
         </p>
-        <h1 className="animate-rise-delay-1 brand-mark mt-3 max-w-4xl font-display text-[clamp(3.4rem,12vw,7.5rem)] leading-[0.9]">
+        <h1 className="animate-rise-delay-1 brand-mark mt-3 max-w-4xl font-display text-[clamp(3.2rem,11vw,6.8rem)] leading-[0.9]">
           {t(locale, "brand")}
         </h1>
         <p className="animate-rise-delay-1 mt-3 font-display text-2xl uppercase tracking-[0.18em] text-ink/80 md:text-3xl">

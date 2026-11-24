@@ -1,23 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidAdminToken } from "@/lib/admin-auth";
-import { buildMailto, createOrder, getNotifyEmail, listOrders } from "@/lib/orders";
+import { deriveDrawer } from "@/lib/drawer";
 import { catalogById } from "@/lib/catalog";
 import { canPlace } from "@/lib/geometry";
-import type { CustomerContact, DrawerSize, Locale, PlacedModule } from "@/lib/types";
+import {
+  buildMailto,
+  createOrder,
+  getNotifyEmail,
+  listOrders,
+} from "@/lib/orders";
+import type {
+  CustomerContact,
+  DrawerSize,
+  Locale,
+  PlacedModule,
+} from "@/lib/types";
+import { MAX_GRID_UNITS } from "@/lib/units";
 
 export const runtime = "nodejs";
 
-function validatePayload(body: unknown): {
-  locale: Locale;
-  customer: CustomerContact;
-  drawer: DrawerSize;
-  placements: PlacedModule[];
-} | { error: string } {
+function validatePayload(body: unknown):
+  | {
+      locale: Locale;
+      customer: CustomerContact;
+      drawer: DrawerSize;
+      placements: PlacedModule[];
+    }
+  | { error: string } {
   if (!body || typeof body !== "object") return { error: "Invalid body" };
   const b = body as Record<string, unknown>;
   const locale: Locale = b.locale === "en" ? "en" : "de";
   const customer = b.customer as CustomerContact | undefined;
-  const drawer = b.drawer as DrawerSize | undefined;
+  const drawer = b.drawer as Partial<DrawerSize> | undefined;
   const placements = b.placements as PlacedModule[] | undefined;
 
   if (!customer?.name?.trim() || !customer?.email?.trim()) {
@@ -26,14 +40,61 @@ function validatePayload(body: unknown): {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim())) {
     return { error: "Invalid email" };
   }
+  if (!drawer) return { error: "Invalid drawer" };
+
+  let normalizedDrawer: DrawerSize;
   if (
-    !drawer ||
-    !Number.isFinite(drawer.width) ||
-    !Number.isFinite(drawer.depth) ||
-    !Number.isFinite(drawer.layers)
+    Number.isFinite(drawer.widthCm) &&
+    Number.isFinite(drawer.depthCm)
   ) {
+    const heightRaw = drawer.heightCm;
+    const heightCm =
+      heightRaw == null ||
+      (typeof heightRaw === "number" &&
+        (!Number.isFinite(heightRaw) || heightRaw <= 0))
+        ? null
+        : Number(heightRaw);
+    normalizedDrawer = deriveDrawer(
+      Number(drawer.widthCm),
+      Number(drawer.depthCm),
+      heightCm,
+    );
+    if (Number.isFinite(drawer.layers)) {
+      normalizedDrawer.layers = Math.min(
+        3,
+        Math.max(1, Math.round(Number(drawer.layers))),
+      );
+    }
+  } else if (
+    Number.isFinite(drawer.width) &&
+    Number.isFinite(drawer.depth) &&
+    Number.isFinite(drawer.layers)
+  ) {
+    // Legacy unit-only payloads
+    const width = Math.min(
+      MAX_GRID_UNITS,
+      Math.max(1, Math.round(Number(drawer.width))),
+    );
+    const depth = Math.min(
+      MAX_GRID_UNITS,
+      Math.max(1, Math.round(Number(drawer.depth))),
+    );
+    normalizedDrawer = {
+      widthCm: (width * 42) / 10,
+      depthCm: (depth * 42) / 10,
+      heightCm: null,
+      width,
+      depth,
+      layers: Math.min(3, Math.max(1, Math.round(Number(drawer.layers)))),
+    };
+  } else {
     return { error: "Invalid drawer" };
   }
+
+  if (normalizedDrawer.width < 1 || normalizedDrawer.depth < 1) {
+    return { error: "Drawer too small for one grid unit" };
+  }
+
   if (!Array.isArray(placements) || placements.length === 0) {
     return { error: "Place at least one module" };
   }
@@ -41,17 +102,13 @@ function validatePayload(body: unknown): {
     return { error: "Too many placements" };
   }
 
-  const normalizedDrawer: DrawerSize = {
-    width: Math.min(16, Math.max(2, Math.round(drawer.width))),
-    depth: Math.min(16, Math.max(2, Math.round(drawer.depth))),
-    layers: Math.min(3, Math.max(1, Math.round(drawer.layers))),
-  };
-
   const seen = new Set<string>();
   const normalized: PlacedModule[] = [];
   for (const p of placements) {
     if (!p || typeof p !== "object") return { error: "Invalid placement" };
-    if (!catalogById[p.moduleId]) return { error: `Unknown module ${p.moduleId}` };
+    if (!catalogById[p.moduleId]) {
+      return { error: `Unknown module ${p.moduleId}` };
+    }
     if (seen.has(p.instanceId)) return { error: "Duplicate instance" };
     seen.add(p.instanceId);
     if (

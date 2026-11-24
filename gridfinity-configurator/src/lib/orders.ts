@@ -30,6 +30,11 @@ type OrderRow = {
 function parseItemsJson(raw: unknown): {
   items: OrderItemSnapshot[];
   placements: PlacedModule[];
+  drawerCm?: {
+    widthCm: number;
+    depthCm: number;
+    heightCm: number | null;
+  };
 } {
   const value =
     typeof raw === "string" ? (JSON.parse(raw) as unknown) : raw;
@@ -39,15 +44,23 @@ function parseItemsJson(raw: unknown): {
   const obj = value as {
     items?: OrderItemSnapshot[];
     placements?: PlacedModule[];
+    drawerCm?: {
+      widthCm: number;
+      depthCm: number;
+      heightCm: number | null;
+    };
   };
   return {
     items: Array.isArray(obj.items) ? obj.items : [],
     placements: Array.isArray(obj.placements) ? obj.placements : [],
+    drawerCm: obj.drawerCm,
   };
 }
 
 function rowToOrder(row: OrderRow): OrderRecord {
   const payload = parseItemsJson(row.items_json);
+  const width = row.drawer_width;
+  const depth = row.drawer_depth;
   return {
     id: row.id,
     createdAt:
@@ -62,8 +75,11 @@ function rowToOrder(row: OrderRow): OrderRecord {
       notes: row.customer_notes ?? undefined,
     },
     drawer: {
-      width: row.drawer_width,
-      depth: row.drawer_depth,
+      widthCm: payload.drawerCm?.widthCm ?? (width * 42) / 10,
+      depthCm: payload.drawerCm?.depthCm ?? (depth * 42) / 10,
+      heightCm: payload.drawerCm?.heightCm ?? null,
+      width,
+      depth,
       layers: row.drawer_layers,
     },
     items: payload.items ?? [],
@@ -83,7 +99,15 @@ export async function createOrder(input: {
   const items = buildBom(input.placements);
   const totalCents = totalFromItems(items);
   const id = `GF-${randomUUID().slice(0, 8).toUpperCase()}`;
-  const payload = { items, placements: input.placements };
+  const payload = {
+    items,
+    placements: input.placements,
+    drawerCm: {
+      widthCm: input.drawer.widthCm,
+      depthCm: input.drawer.depthCm,
+      heightCm: input.drawer.heightCm,
+    },
+  };
 
   await sql(
     `insert into orders (
@@ -178,7 +202,7 @@ export function buildMailto(order: OrderRecord): string {
     `Order: ${order.id}`,
     `Customer: ${order.customer.name} <${order.customer.email}>`,
     order.customer.phone ? `Phone: ${order.customer.phone}` : null,
-    `Drawer: ${order.drawer.width}×${order.drawer.depth} × ${order.drawer.layers} layer(s)`,
+    `Drawer: ${order.drawer.widthCm}×${order.drawer.depthCm} cm → ${order.drawer.width}×${order.drawer.depth} U × ${order.drawer.layers} layer(s)`,
     `Total: ${(order.totalCents / 100).toFixed(2)} EUR`,
     "",
     "BOM:",
